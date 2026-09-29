@@ -47,6 +47,8 @@ const CLOSE_BUTTON_SELECTOR: &str = "dock-tab-close-button";
 /// placeholder knows where to fly in from.
 const DRAG_PREVIEW_SIZE: gpui::Size<gpui::Pixels> = gpui::size(px(96.), px(30.));
 
+const SHOW_ELLIPSIS_MENU: bool = false;
+
 /// The preview that follows the cursor while a panel is dragged.
 ///
 /// `gpui_base::dock::DragPanel` is the payload and draws nothing; this is the
@@ -325,32 +327,34 @@ impl TabGroupSkin {
                     )
                 },
             )
-            .child(
-                Button::new("menu")
-                    .icon(IconName::Ellipsis)
-                    .xsmall()
-                    .ghost()
-                    .tab_stop(false)
-                    .dropdown_menu(move |menu, window, cx| {
-                        menu.when_some(panel.clone(), |menu, panel| {
-                            panel.dropdown_menu(menu, window, cx)
+            .when(SHOW_ELLIPSIS_MENU, |this| {
+                this.child(
+                    Button::new("menu")
+                        .icon(IconName::Ellipsis)
+                        .xsmall()
+                        .ghost()
+                        .tab_stop(false)
+                        .dropdown_menu(move |menu, window, cx| {
+                            menu.when_some(panel.clone(), |menu, panel| {
+                                panel.dropdown_menu(menu, window, cx)
+                            })
+                            .separator()
+                            .menu_with_disabled(
+                                match zoomed {
+                                    true => t!("Dock.Zoom Out"),
+                                    false => t!("Dock.Zoom In"),
+                                },
+                                Box::new(ToggleZoom),
+                                !menu_zoom,
+                            )
+                            .when(closable, |menu| {
+                                menu.separator()
+                                    .menu(t!("Dock.Close"), Box::new(ClosePanel))
+                            })
                         })
-                        .separator()
-                        .menu_with_disabled(
-                            match zoomed {
-                                true => t!("Dock.Zoom Out"),
-                                false => t!("Dock.Zoom In"),
-                            },
-                            Box::new(ToggleZoom),
-                            !menu_zoom,
-                        )
-                        .when(closable, |menu| {
-                            menu.separator()
-                                .menu(t!("Dock.Close"), Box::new(ClosePanel))
-                        })
-                    })
-                    .anchor(Anchor::TopRight),
-            )
+                        .anchor(Anchor::TopRight),
+                )
+            })
     }
 
     /// The one-panel title bar: no tabs, just the title and the controls.
