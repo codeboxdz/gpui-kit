@@ -745,6 +745,13 @@ impl TabGroupRenderer for TabGroupSkin {
         window: &mut Window,
         cx: &mut App,
     ) -> AnyElement {
+        if group
+            .active_panel()
+            .is_some_and(|panel| panel.panel_name(cx) == "RightPanel")
+        {
+            return Empty.into_any_element();
+        }
+
         let visible: Vec<usize> = group
             .panels()
             .iter()
